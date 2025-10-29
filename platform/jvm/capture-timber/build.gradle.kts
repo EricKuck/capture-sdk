@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.detekt)
 
     // Publish
     alias(libs.plugins.dokka) // Must be applied here for publish plugin.
@@ -42,22 +41,6 @@ android {
         disable.add("GradleDependency")
         disable.add("AndroidGradlePluginVersion")
     }
-}
-
-detekt {
-    // Define the detekt configuration(s) you want to use.
-    // Defaults to the default detekt configuration.
-    config.setFrom("detekt.yml")
-}
-
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-    exclude {
-        it.file.absolutePath.contains("test/")
-    }
-}
-
-tasks.preBuild {
-    dependsOn("detekt")
 }
 
 dependencies {

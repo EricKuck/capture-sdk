@@ -27,7 +27,7 @@ rustAndroidPlugin       = "0.3.4"
 startupRuntime          = "1.2.0"
 timber                  = "5.0.1"
 truth                   = "1.1.4"
-ui                      = "1.7.6"
+ui                      = "1.10.0-alpha01"
 
 [libraries]
 androidx-appcompat         = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }

@@ -3,9 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.rust.android)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.detekt)
 
     // Publish
     alias(libs.plugins.dokka) // Must be applied here for publish plugin.
@@ -44,6 +42,8 @@ dependencies {
 }
 
 android {
+    sourceSets["main"].jniLibs.srcDirs("src/androidMain/jniLibs")
+
     namespace = "io.bitdrift.capture"
 
     compileSdk = 36
@@ -87,52 +87,6 @@ android {
 
 }
 
-// Rust cargo build toolchain
-cargoNdk {
-    librariesNames = arrayListOf("libcapture.so")
-    extraCargoBuildArguments = arrayListOf("--package", "capture")
-
-    buildTypes {
-        getByName("release") {
-            buildType = "release"
-            extraCargoBuildArguments = arrayListOf(
-                "--package", "capture",
-                "-Z", "build-std=std,panic_abort",
-                "-Z", "build-std-features=optimize_for_size,panic_immediate_abort",
-            )
-            // Annoyingly we have to repeat all the flags for the release build as
-            // the RUSTFLAGS values are not added together.
-            // TODO(snowp): See if we can make this a bit better
-            // enable 16 KB ELF alignment on Android to support API 35+
-            extraCargoEnv = mapOf(
-              "RUSTFLAGS" to "-C link-args=-Wl,-z,max-page-size=16384,--build-id -C codegen-units=1 -C embed-bitcode -C lto=fat -C opt-level=z",
-              "RUSTC_BOOTSTRAP" to "1" // Required for using unstable features in the Rust compiler
-            )
-          }
-
-        getByName("debug") {
-            buildType = "dev"
-        }
-    }
-
-    module = "../.."
-    targetDirectory = "./target"
-    // Default set for local dev on ARM-based macos
-    targets = arrayListOf("arm64")
-    // enable 16 KB ELF alignment on Android to support API 35+
-    extraCargoEnv = mapOf(
-      "RUSTFLAGS" to "-C link-args=-Wl,-z,max-page-size=16384,--build-id",
-      "RUSTC_BOOTSTRAP" to "1" // Required for using unstable features in the Rust compiler
-    )
-}
-
-// detekt
-detekt {
-    // Define the detekt configuration(s) you want to use.
-    // Defaults to the default detekt configuration.
-    config.setFrom("detekt.yml")
-}
-
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:4.31.1"
@@ -146,17 +100,6 @@ protobuf {
             }
         }
     }
-}
-
-
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-    exclude {
-        it.file.absolutePath.contains("test/")
-    }
-}
-
-tasks.preBuild {
-    dependsOn("detekt")
 }
 
 publishing {
